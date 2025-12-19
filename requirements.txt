@@ -1,0 +1,6 @@
+matplotlib==3.10.8
+numpy==2.3.5
+openai==2.14.0
+pandas==2.3.3
+streamlit==1.51.0
+yfinance==0.2.66
