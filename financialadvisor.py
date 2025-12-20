@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 import numpy as np
 import re
+import os
 import openai 
 from openai import OpenAI
 
@@ -17,7 +18,7 @@ st.set_page_config(
 
 # Configure your OpenAI API key
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+client = OpenAI(api_key= os.environ.get("OPENAI_API_KEY"))
 
 # App Header
 st.title('AI Financial Advisor')
@@ -46,9 +47,9 @@ allocation = {}  # Initialize allocation dictionary
 
 if client_goal_text:
     with st.spinner('Generating recommended portfolio allocation...This may take 15-20 seconds...'):
-        response = client.chat.completions.create(
-            model='gpt-4.1',
-            messages=[
+        response = client.responses.create(
+            model='gpt-4.1-mini',
+            input=[
                 {"role": "system", "content": "You are a professional AI financial advisor."},
                 {"role": "user", "content": f"""
                 Based on this client goal, return ONLY a bullet list of asset classes or tickers 
@@ -59,7 +60,7 @@ if client_goal_text:
                 """}
             ]
         )
-        ai_output = response.choices[0].message.content 
+        ai_output = response.output_text 
         st.markdown("### AI Suggested Portfolio Allocation")
         st.markdown(ai_output)
 
@@ -109,7 +110,11 @@ if allocation:
     weights = np.array(list(allocation.values()))
 
     # Fetch historical data
-    data = yf.download(tickers, period="5y")["Adj Close"]
+    try:
+        data = yf.download(tickers, period="5y")["Adj Close"]
+    except Exception as e:
+        st.error("Failed to fetch market data.")
+        st.stop()
     if isinstance(data, pd.Series):
         data = data.to_frame()
 
